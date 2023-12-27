@@ -1,152 +1,65 @@
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Fabric.js T-shirt Editor</title>
-    <style>
-      canvas {
-        border: 1px solid #000;
-      }
-    </style>
-  </head>
-  <body>
-    <input type="file" id="logoInput" accept="image/*" />
-    <button onclick="changeOverlay()">Change Overlay</button>
-    <input type="color" id="colorPicker" value="#ff0000" />
-    <!-- Color picker input -->
-    <button onclick="centerLogoHorizontally()">Center Horizontally</button>
-    <button onclick="centerLogoVertically()">Center Vertically</button>
-    <button onclick="resizeLogo()">Reset Size</button>
-    <button onclick="deleteLogo()">Delete Logo</button>
-    <!-- New button for deleting the logo -->
-    <canvas id="canvas" width="530" height="580"></canvas>
+<script>
+  import { Meteor } from "meteor/meteor";
+  import { LinksCollection } from '../api/links';
+  import Task from "./Task.svelte";
+  
+  import BlogPost from './BlogPost.svelte';
+  import Login from './Login.svelte';
 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/fabric.js/3.6.6/fabric.min.js"></script>
-    <script>
-      const canvas = new fabric.Canvas("canvas");
-      let overlayColor = "#ff0000"; // Default overlay color
-      let tshirtOverlay; // Declare the variable to hold the fabric.Image object
-      let logo;
+    const getTasks = () => ([
+        { _id: 'task_1', text: 'This is task 1' },
+        { _id: 'task_2', text: 'This is task 2' },
+        { _id: 'task_3', text: 'This is task 3' },
+    ])
+  
+  let counter = 0;
+  const addToCounter = () => {
+    counter += 1;
+  }
+  
+  let subIsReady = false;
+  $m: {
+    const handle = Meteor.subscribe("links.all");
+    subIsReady = handle.ready();
+  }
 
-      function addTshirtOverlay() {
-        fabric.Image.fromURL("img/crew_front.png", function (img) {
-          img.set({
-            left: 0,
-            top: 0,
-            width: canvas.width,
-            height: canvas.height,
-            selectable: false,
-            backgroundColor: overlayColor, // Use the variable here
-          });
-          tshirtOverlay = img;
-          canvas.add(img);
-          canvas.renderAll();
-        });
-      }
+  // more information about $m at https://atmospherejs.com/zodern/melte#tracker-statements
+  let links;
+  $m: links = LinksCollection.find().fetch();
+</script>
 
-      document
-        .getElementById("logoInput")
-        .addEventListener("change", function (e) {
-          const file = e.target.files[0];
-          const reader = new FileReader();
+  <BlogPost />
 
-          reader.onload = function (event) {
-            fabric.Image.fromURL(event.target.result, function (img) {
-              const newSizeFactor = 5; // Set the factor to make the logo 5 times smaller
-              img.set({
-                left: 100,
-                top: 100,
-                cornerSize: 10,
-                cornerColor: "rgba(0,0,255,0.5)",
-                transparentCorners: false,
-                selectable: true,
-              });
+  <Login />
 
-              // Resize the logo to be roughly 5 times smaller
-              img.scaleToWidth(img.width / newSizeFactor);
-              img.scaleToHeight(img.height / newSizeFactor);
+<div class="container">
+    <header>
+        <h1>Todo List</h1>
+    </header>
 
-              logo = img;
-              canvas.add(img);
-            });
-          };
+    <ul>
+        {#each getTasks() as task (task._id)}
+            <Task task={task} />
+        {/each}
+    </ul>
+</div>
 
-          reader.readAsDataURL(file);
-        });
+<div class="container">
+  <h1>Welcome to Meteor!</h1>
 
-      // Listen to color picker changes
-      document
-        .getElementById("colorPicker")
-        .addEventListener("input", function (event) {
-          overlayColor = event.target.value;
-          updateOverlayColor();
-        });
+  <button on:click={addToCounter}>Click Me</button>
+  <p>You've pressed the button {counter} times.</p>
 
-      function updateOverlayColor() {
-        if (tshirtOverlay) {
-          tshirtOverlay.set({ backgroundColor: overlayColor });
-          canvas.renderAll();
-        }
-      }
-
-      function centerLogoHorizontally() {
-        if (logo) {
-          const canvasCenter = canvas.width / 2;
-          logo.set({ left: canvasCenter - logo.getScaledWidth() / 2 });
-          canvas.renderAll();
-        }
-      }
-
-      function centerLogoVertically() {
-        if (logo) {
-          const canvasCenter = canvas.height / 2;
-          logo.set({ top: canvasCenter - logo.getScaledHeight() / 2 });
-          canvas.renderAll();
-        }
-      }
-
-      function resizeLogo() {
-        if (logo) {
-          const newSizeFactor = 5; // Set the factor to make the logo 5 times smaller
-          logo.scaleToWidth(logo.width / newSizeFactor);
-          logo.scaleToHeight(logo.height / newSizeFactor);
-          canvas.renderAll();
-        }
-      }
-
-      function deleteLogo() {
-        if (logo) {
-          if (
-            canvas.getObjects().length === 1 ||
-            logo === canvas.getActiveObject()
-          ) {
-            canvas.remove(logo);
-            logo = null;
-            canvas.renderAll();
-
-            // Reset the file input value after logo deletion
-            document.getElementById("logoInput").value = "";
-          }
-        }
-      }
-
-      function changeOverlay() {
-        // Implement logic to change the overlay of the T-shirt
-        // For example, you can change the source of the tshirtOverlay
-        // e.g., tshirtOverlay.setSrc('new_overlay_image.png', function () { canvas.renderAll(); });
-        // Ensure to handle the CORS issues if the overlay image is hosted on a different domain.
-      }
-
-      // Initial setup
-      addTshirtOverlay();
-
-      // Listen for the delete key press
-      window.addEventListener("keydown", function (event) {
-        if (event.key === "Delete") {
-          deleteLogo();
-        }
-      });
-    </script>
-  </body>
-</html>
+  <h2>Learn Meteor!</h2>
+  {#if subIsReady}
+    <ul>
+      {#each links as link (link._id)}
+        <li><a href={link.url} target="_blank" rel="noreferrer">{link.title}</a></li>
+      {/each}
+    </ul>
+  {:else}
+    <div>Loading ...</div>
+  {/if}
+  <h2>Typescript ready</h2>
+  <p>Just add lang="ts" to .svelte components.</p>
+</div>
