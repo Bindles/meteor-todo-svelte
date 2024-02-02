@@ -3,9 +3,17 @@
   import { LinksCollection } from '../api/links';
   import Task from "./Task.svelte";
   
+  import Todo from './Todo.svelte'
   import BlogPost from './BlogPost.svelte';
+  import NewPost from './BlogPost.svelte';
   import Login from './Login.svelte';
 
+    var taskz = [
+        { _id: 'task_1', text: 'This is task 1' },
+        { _id: 'task_2', text: 'This is task 2' },
+        { _id: 'task_3', text: 'This is task 3' },
+    ]
+    
     const getTasks = () => ([
         { _id: 'task_1', text: 'This is task 1' },
         { _id: 'task_2', text: 'This is task 2' },
@@ -23,12 +31,20 @@
     subIsReady = handle.ready();
   }
 
+
+  function xxxaddTodoItem() {
+    taskz.push({ _id: 'task_1', text: 'This is task 4' })
+    const getTasks = () => (taskz)
+  }
+
   // more information about $m at https://atmospherejs.com/zodern/melte#tracker-statements
   let links;
   $m: links = LinksCollection.find().fetch();
 </script>
+  <Todo />
 
   <BlogPost />
+  <NewPost />
 
   <Login />
 
